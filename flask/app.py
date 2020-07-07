@@ -162,7 +162,7 @@ def postnew():
         isbn13 = request.form.get('isbn13')
         isbn10 = request.form.get('isbn10')
 
-        if db.session.query(Ratings).filter(Ratings.isbn13 == isbn13).count() == 0:
+        if db.session.query(Ratings).filter(Ratings.isbn10 == isbn10).count() == 0:
             
             if len(isbn13) == 13:
                 pass
