@@ -8,7 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 CORS(app)
-ENV = 'dev'
+ENV = 'prod'
 
 # Setting database configs
 if ENV == 'dev':
@@ -16,7 +16,7 @@ if ENV == 'dev':
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Biology512@localhost/book_recs'
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = ''
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://uixmjkitybbefh:19e12bc21ed35bb3814afaf67efdeaa4c0aa39a5c31d8830993ebfca7a41b353@ec2-35-153-12-59.compute-1.amazonaws.com:5432/d760mtnimm0qh3'
 
 app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 
