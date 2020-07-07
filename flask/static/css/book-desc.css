@@ -1,0 +1,72 @@
+*, html {
+	font-family: 'Roboto', 'Arial', sans-serif;
+}
+
+.nav_top {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin: 1em 0;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+img {
+    max-width: 125px;
+    max-height: 150px;
+}
+
+.form-group {
+    text-align: center;
+    padding: 0em 2em 2em 2em;
+}
+
+.rating_form {
+    align-items: center;
+    text-align: center;
+    margin-bottom: 2em;
+    border: 1px solid #ccc;
+    padding: 1em;
+}
+
+.card-text.description {
+    font-size: 0.85em;
+    max-width: 400px;
+    margin: auto;
+    padding: 2em;
+}
+
+.card-body {
+    text-align: center;
+}
+
+.btn_neg {
+	padding: 0.5em 1em;
+    font-weight: 700;
+	border: 2px solid #333;
+	color: #333;
+	background: transparent;
+}
+
+.btn_neg:hover {
+    cursor: pointer;
+}
+
+
+.btn {
+	padding: 0.5em 1em;
+    font-weight: 700;
+	border: 2px solid lightseagreen;
+	color: #fff;
+	background: lightseagreen;
+}
+
+.btn:hover {
+	cursor: pointer;
+}

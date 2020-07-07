@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/book-desc.css?anything=stopcache26" />
+    <title>Search Results</title>
+  </head>
+  <body>
+    <div class="nav_top">
+      <a href="/search"><button class="btn_neg">Back to search results</button></a>
+  </div>
+{% block main %}
+  <div class="container">
+    <h3 class="card-header">{{ book.volumeInfo.title }}</h3>
+
+    {% if book.volumeInfo.industryIdentifiers[1] and book.volumeInfo.industryIdentifiers[0] %} 
+    <form class="rating_form" action="/new-rating" method="POST">
+      <select id="isbn13" class="isbn13" name="isbn13" type="hidden">
+          <option value="{{book.volumeInfo.industryIdentifiers[0].identifier}}">{{book.volumeInfo.industryIdentifiers[0].identifier}}</option>
+      </select>
+      <select id="isbn10" class="isbn10" name="isbn10" type="hidden">
+          <option value="{{book.volumeInfo.industryIdentifiers[1].identifier}}">{{book.volumeInfo.industryIdentifiers[1].identifier}}</option>
+      </select>
+      <div class="form-group">
+        <h4>Please rate the book</h4>
+        <input type="radio" name="rating" value=1 /> 1
+        <input type="radio" name="rating" value=2 /> 2
+        <input type="radio" name="rating" value=3 /> 3
+        <input type="radio" name="rating" value=4 /> 4
+        <input type="radio" name="rating" value=5 /> 5
+      </div>
+      <input type="submit" value="Submit" class="btn" />
+    </form>
+    {% else %}
+    <h5>Sorry, this book does not have available ISBN numbers and therefore cannot be rated.</h5>
+    {% endif %}
+
+    <div class="card-body">
+      {% if book.volumeInfo.subtitle %}
+        <h5 class="card-title">{{ book.volumeInfo.subtitle }}</h5>
+      {% endif %}
+    </div><br>
+    {% if book.volumeInfo.imageLinks %}
+    <img id="imgDetails" src="{{ book.volumeInfo.imageLinks.smallThumbnail }}" title="{{ book.volumeInfo.title }}"
+    alt="{{ book.volumeInfo.title }}"/>
+    {% else %}
+    <img width="60%" height="70%" src="../static/default-book-cover.jpg" title="{{ book.volumeInfo.title }}"
+    alt="{{ book.volumeInfo.title }}"/>
+    {% endif %}
+    <div class="card-body">
+      {% if book.volumeInfo.pageCount %}
+        <h5 class="card-subtitle text-muted">Pages: {{ book.volumeInfo.pageCount }}</h5>
+      {% endif %}
+      <br><p class="card-text description">{{ book.volumeInfo.description }}</p>
+    </div>
+    <ul class="list-group list-group-flush">
+      {% if book.volumeInfo.authors %}
+        &nbsp;Authors:<br>
+        {% for author in book.volumeInfo.authors %}
+          <li class="list-group-item">{{ author }}</li><br>
+        {% endfor %}
+      {% endif %}
+    </ul>
+    <div class="card-body">
+      {% if book.volumeInfo.publisher %}
+        <span class="card-link">Publisher: {{ book.volumeInfo.publisher }}</span>
+      {% endif %}
+      {% if book.volumeInfo.publishDate %}
+        <span class="card-link">Published: {{ book.volumeInfo.publishedDate }}</span>
+      {% endif %}
+      {% if book.volumeInfo.categories %}
+        <br>Categories:
+        {% for category in book.volumeInfo.categories %}
+          <span class="card-link">{{ category }}</span>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+<script>
+  function hide(){
+    var isbn13 = document.getElementById('isbn13');
+    var isbn10 = document.getElementById('isbn10');
+    isbn13.style.visibility = 'hidden';
+    isbn10.style.visibility = 'hidden';
+  }
+  hide()
+</script>
