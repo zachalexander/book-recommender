@@ -16,7 +16,7 @@ if ENV == 'dev':
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Biology512@localhost/book_recs'
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://uixmjkitybbefh:19e12bc21ed35bb3814afaf67efdeaa4c0aa39a5c31d8830993ebfca7a41b353@ec2-35-153-12-59.compute-1.amazonaws.com:5432/d760mtnimm0qh3'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://grrxtpxtklabjt:19192f867330d309d07c38acd0d7f79dc1fef4ccafc757e9e25245d03f54ba20@ec2-52-204-232-46.compute-1.amazonaws.com:5432/d7fl9nj50gmm5f'
 
 app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -44,14 +44,15 @@ class Ratings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(200))
     rating = db.Column(db.Integer)
-    isbn13 = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
-    def __init__(self, username, rating, isbn13, isbn10):
+    def __init__(self, username, rating, isbn10):
         self.username = username
         self.rating = rating
-        self.isbn13 = isbn13
         self.isbn10 = isbn10
+
+
+# Existing ratings table
 
 
 # Building routes for the site
@@ -177,7 +178,7 @@ def postnew():
             else:
                 pass
           
-            data = Ratings(username, rating, isbn13, isbn10)
+            data = Ratings(username, rating, isbn10)
             db.session.add(data)
             db.session.commit()
             return render_template('success.html')
