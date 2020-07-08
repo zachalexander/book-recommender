@@ -19,7 +19,7 @@ import json
 
 app = Flask(__name__)
 CORS(app)
-ENV = 'dev'
+ENV = 'prod'
 
 # Setting database configs
 if ENV == 'dev':
