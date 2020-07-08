@@ -5,6 +5,17 @@ import requests;
 from markupsafe import escape;
 from flask_user import login_required, UserManager, UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
+from sqlalchemy import event
+from sqlalchemy import DDL
+from random import seed
+from random import random
+import uuid
+from uuid import uuid1
+import xmltodict
+import urllib.request as urllib2
+from urllib.parse import quote
+from pprint import pprint
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -24,6 +35,23 @@ app.config['SECRET_KEY'] = "OCML3CRawVEueaxcuKHOph"
 
 db = SQLAlchemy(app)
 
+def customid():
+    idquery = db.session.query(Ratings).order_by(Ratings.col_id.desc()).first()
+    last_id = int(idquery.col_id)
+    next_id = int(last_id) + 1
+    return next_id
+
+def user_id():
+    idquery = db.session.query(Ratings).order_by(Ratings.userid.desc()).first()
+    last_id = int(idquery.userid)
+    next_id = int(last_id) + 1
+    return next_id
+
+def parse_xml(request_xml):
+    # xml_data = request.form['GoodreadsResponse']
+    content_dict = xmltodict.parse(request_xml)
+    return jsonify(content_dict)
+
 # Building user model
 class User(db.Model):
     __tablename__ = 'users'
@@ -41,18 +69,20 @@ class User(db.Model):
 # Building ratings model
 class Ratings(db.Model):
     __tablename__ = 'ratings'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(200))
+    col_id = db.Column(db.Integer, primary_key=True)
+    userid = db.Column(db.Integer)
     rating = db.Column(db.Integer)
+    book_id = db.Column(db.Integer)
+    username = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
-    def __init__(self, username, rating, isbn10):
-        self.username = username
+    def __init__(self, col_id, userid, rating, book_id, username, isbn10):
+        self.col_id = col_id
+        self.userid = userid
         self.rating = rating
+        self.book_id = book_id
+        self.username = username
         self.isbn10 = isbn10
-
-
-# Existing ratings table
 
 
 # Building routes for the site
@@ -114,77 +144,55 @@ def sign_out():
 @app.route("/search", methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
-    # ensure title of book was submitted
+        response_string = 'https://www.goodreads.com/search/index.xml?format=xml&key=Ev590L5ibeayXEVKycXbAw&q=' + quote(request.form.get("title"))  
+        xml = urllib2.urlopen(response_string)
+        data = xml.read()
+        xml.close()
+        data = xmltodict.parse(data)
+        gr_data = json.dumps(data)
+        goodreads_fnl = json.loads(gr_data)
+        gr = goodreads_fnl['GoodreadsResponse']['search']['results']
+
+    
         if not request.form.get("title"):
             return("Please enter a book title below.")
 
-        # if user provided author of the book
-        if request.form.get("author"):
-            """
-            return rendered result.html page with books from Google Books API written by the provided author that match
-            search results
-            """
-            return render_template("searchResults.html", books = requests.get("https://www.googleapis.com/books/v1/volumes?q=" +
-                               request.form.get("title") + "+inauthor:" + request.form.get("author") +
-                               "&key=AIzaSyDIVPxEVrrJxhILbUWL2Nnbcp-bBqBU4vg").json())
+        return render_template("searchResults.html", books = gr)
 
-        # return rendered result.html page with books from Google Books API that match search results
-        return render_template("searchResults.html", books = requests.get("https://www.googleapis.com/books/v1/volumes?q=" +
-                               request.form.get("title") + "&key=AIzaSyDIVPxEVrrJxhILbUWL2Nnbcp-bBqBU4vg").json())
-
-    # else if user reached route via GET (as by clicking a link or via redirect)
     else:
         username = session.get('username')
-        # return rendered search.html page
         return render_template("search.html", username = username)
 
 
 # book details route
 @app.route("/bookDetails/<book_id>")
 def bookDetails(book_id):
-
-    # get book from Google Books API that user choose from home page
-    book = requests.get("https://www.googleapis.com/books/v1/volumes?q=" + book_id + "&key=AIzaSyDIVPxEVrrJxhILbUWL2Nnbcp-bBqBU4vg").json()
-
-    """
-    return rendered bookDetails.html page with book from Google Books API that user choose from home page and with number of
-    users that read that book, average grade of that book and all comments and grades for that book
-    """
-    return render_template("bookDetails.html", book = book["items"][0])
+    response_string = 'https://www.goodreads.com/book/show?id='+ book_id + '&key=Ev590L5ibeayXEVKycXbAw'
+    xml = urllib2.urlopen(response_string)
+    data = xml.read()
+    xml.close()
+    data = xmltodict.parse(data)
+    gr_data = json.dumps(data)
+    goodreads_fnl = json.loads(gr_data)
+    gr = goodreads_fnl['GoodreadsResponse']['book']
+    return render_template("bookDetails.html", book = gr)
 
 
 
 @app.route("/new-rating", methods=['POST'])
 def postnew():
     if request.method == 'POST':
-        username = session.get('username')
+        col_id = customid()
+        userid = user_id()
         rating = request.form['rating']
-        isbn13 = request.form.get('isbn13')
+        book_id = request.form.get('bookid')
+        username = session.get('username')
         isbn10 = request.form.get('isbn10')
 
-        if db.session.query(Ratings).filter(Ratings.isbn10 == isbn10).count() == 0:
-            
-            if len(isbn13) == 13:
-                pass
-            elif len(isbn13) == 10 or len(isbn10) == 13:
-                isbn13_old = isbn13
-                isbn10_old = isbn10
-                isbn10 = isbn13_old
-                isbn13 = isbn10_old
-            elif len(isbn13) == 0:
-                isbn13 = 'no id'
-            elif len(isbn10) == 0:
-                isbn10 = 'no id'
-            else:
-                pass
-          
-            data = Ratings(username, rating, isbn10)
-            db.session.add(data)
-            db.session.commit()
-            return render_template('success.html')
-        return render_template('search.html', message='You have already submitted ratings for this book!')
-
-
+        data = Ratings(col_id, userid, rating, book_id, username, isbn10)
+        db.session.add(data)
+        db.session.commit()
+        return render_template('success.html')
 
 if __name__ == '__main__':
     app.run()

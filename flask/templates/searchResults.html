@@ -14,30 +14,30 @@
           <a href="/search"><button class="btn_neg">Back to search</button></a>
       </div>
       <div class="grid-container">
-    {% for book in books["items"] %}
+    {% for book in books["work"] %}
     <div id="book" class="card text-white bg-warning mb-3">
         <div class="card-header text">
             <a title="See book details" class="text" >
-                {{ book.volumeInfo.title }}
+                {{ book.best_book.title }}
             </a>
         </div>
         <div class="card-body">
-            {% if book.volumeInfo.imageLinks %}
-                <img id="bookImage" src="{{ book.volumeInfo.imageLinks.smallThumbnail }}"
-                        title="{{ book.volumeInfo.title }}" alt="{{ book.volumeInfo.title }}"/>
+            {% if book.best_book.image_url %}
+                <img id="bookImage" src="{{ book.best_book.image_url }}"
+                        title="{{ book.best_book.title }}" alt="{{ book.best_book.title }}"/>
             {% else %}
                 <img width="60%" height="70%" src="../static/default-book-cover.jpg"
-                        title="{{ book.volumeInfo.title }}" alt="{{ book.volumeInfo.title }}"/>
+                        title="{{ book.best_book.title }}" alt="{{ book.best_book.title }}"/>
             {% endif %}
             <h4 class="card-title"></h4>
             <p class="card-text">
-                {% if book.volumeInfo.authors %}
-                    {% for author in book.volumeInfo.authors[:3] %}
-                        <span id="author" class="badge badge-primary text">{{ author[:24] }}&nbsp;</span>
+                {% if book.best_book.author.name %}
+                    {% for author in book.best_book.author.name %}
+                        <span id="author" class="badge badge-primary text">{{ author }}&nbsp;</span>
                     {% endfor %}
                 {% endif %}
             </p>
-            <br><a href="{{ url_for('bookDetails', book_id=book.id) }}"><button class="btn_neg" type="submit">Rate this book</button></a>
+            <br><a href="{{ url_for('bookDetails', book_id=book.best_book.id['#text']) }}"><button class="btn_neg" type="submit">Rate this book</button></a>
         </div>
     </div>
 {% endfor %}
