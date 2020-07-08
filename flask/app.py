@@ -19,7 +19,7 @@ import json
 
 app = Flask(__name__)
 CORS(app)
-ENV = 'prod'
+ENV = 'dev'
 
 # Setting database configs
 if ENV == 'dev':
@@ -41,11 +41,16 @@ def customid():
     next_id = int(last_id) + 1
     return next_id
 
-def user_id():
-    idquery = db.session.query(Ratings).order_by(Ratings.userid.desc()).first()
-    last_id = int(idquery.userid)
-    next_id = int(last_id) + 1
-    return next_id
+def user_id(userid):
+    if db.session.query(Ratings).filter(Ratings.username == userid).count() == 0:
+        idquery = db.session.query(Ratings).order_by(Ratings.userid.desc()).first()
+        last_id = int(idquery.userid)
+        next_id = int(last_id) + 1
+        return next_id
+    else:
+        idquery = db.session.query(Ratings).filter(Ratings.username == userid).first()
+        idquery_old = idquery.userid
+        return idquery_old
 
 def parse_xml(request_xml):
     # xml_data = request.form['GoodreadsResponse']
@@ -109,6 +114,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             session['username'] = user.username
+            session['user_id'] = user_id(session.get('username'))
             return redirect(url_for('search'))
         else:
             return render_template('register.html', message='Sorry, this username is already taken.')
@@ -127,6 +133,7 @@ def sign_in():
         user = db.session.query(User).filter(User.username == username_entered).first()
         if user is not None and check_password_hash(user.password_hash, password_entered):
             session['username'] = user.username
+            session['user_id'] = user_id(session.get('username'))
             return redirect(url_for('search'))
         return render_template('signin.html', message="Sorry, either your username does not exist or your password does not match.")
     else:
@@ -183,7 +190,7 @@ def bookDetails(book_id):
 def postnew():
     if request.method == 'POST':
         col_id = customid()
-        userid = user_id()
+        userid = user_id(session.get('username'))
         rating = request.form['rating']
         book_id = request.form.get('bookid')
         username = session.get('username')
