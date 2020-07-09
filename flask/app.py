@@ -19,7 +19,7 @@ import json
 
 app = Flask(__name__)
 CORS(app)
-ENV = 'prod'
+ENV = 'dev'
 
 # Setting database configs
 if ENV == 'dev':
@@ -51,6 +51,12 @@ def user_id(userid):
         idquery = db.session.query(Ratings).filter(Ratings.username == userid).first()
         idquery_old = idquery.userid
         return idquery_old
+
+def idcounter():
+    iding = db.session.query(GrBook).order_by(GrBook.gr_id.desc()).first()
+    last_id = int(iding.gr_id)
+    next_id = int(last_id) + 1
+    return next_id
 
 def parse_xml(request_xml):
     # xml_data = request.form['GoodreadsResponse']
@@ -89,6 +95,25 @@ class Ratings(db.Model):
         self.username = username
         self.isbn10 = isbn10
 
+# Building the new recommendations model
+class NewRecs(db.Model):
+    __tablename__ = 'new_recs'
+    col_id = db.Column(db.Integer, primary_key=True)
+    userid = db.Column(db.Integer)
+    prediction = db.Column(db.Float)
+    book_id = db.Column(db.Integer)
+    username = db.Column(db.String(200))
+    isbn10 = db.Column(db.String(200))
+
+# Building the lookup between book_id and gr_book_id
+class GrBook(db.Model):
+    __tablename__ = 'gr_books'
+    gr_id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer)
+
+    def __init__(self, gr_id, book_id):
+        self.gr_id = gr_id
+        self.book_id = book_id
 
 # Building routes for the site
 
@@ -196,10 +221,53 @@ def postnew():
         username = session.get('username')
         isbn10 = request.form.get('isbn10')
 
-        data = Ratings(col_id, userid, rating, book_id, username, isbn10)
+        if db.session.query(GrBook).filter(GrBook.book_id == book_id).count() == 0:
+            gr_id = idcounter()
+            grdata = GrBook(gr_id, book_id)
+            db.session.add(grdata)
+            db.session.commit()
+        else:
+            grfilter = db.session.query(GrBook).filter(GrBook.book_id == book_id).first()
+            gr_id = grfilter.gr_id
+
+        data = Ratings(col_id, userid, rating, gr_id, username, isbn10)
         db.session.add(data)
         db.session.commit()
         return render_template('success.html')
+
+
+@app.route("/recs", methods=['GET'])
+def getrecs():
+    if request.method == 'GET':
+        userid = user_id(session.get('username'))
+        recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
+        
+        recs_json = []
+        for i in recs:
+            response_string = 'https://www.goodreads.com/book/show?id='+ str(i.book_id) + '&key=Ev590L5ibeayXEVKycXbAw'
+            xml = urllib2.urlopen(response_string)
+            data = xml.read()
+            xml.close()
+            data = xmltodict.parse(data)
+            gr_data = json.dumps(data)
+            goodreads_fnl = json.loads(gr_data)
+            gr = goodreads_fnl['GoodreadsResponse']['book']
+            gr_json = json.dumps(gr)
+            print(gr_json.title)
+
+
+
+            #### FIX PRINTING OF RECS
+
+
+            # recs_json
+            # recs_json.append(gr)
+            # book = json.dumps(recs_json)
+
+        return gr
+        # render_template('recs.html', book = book)
+    else:
+        return "No Data"
 
 if __name__ == '__main__':
     app.run()
