@@ -154,7 +154,7 @@ def register():
             db.session.commit()
             session['username'] = user.username
             session['user_id'] = user_id(session.get('username'))
-            return redirect(url_for('profile'))
+            return redirect(url_for('get_profile'))
         else:
             return render_template('register.html', message='Sorry, this username is already taken.')
 
@@ -173,7 +173,7 @@ def sign_in():
         if user is not None and check_password_hash(user.password_hash, password_entered):
             session['username'] = user.username
             session['user_id'] = user_id(session.get('username'))
-            return redirect(url_for('profile'))
+            return redirect(url_for('get_profile'))
         return render_template('signin.html', message="Sorry, either your username does not exist or your password does not match.")
     else:
         return render_template('signin.html')
