@@ -46,6 +46,8 @@ class Window(object):
          unboundedPreceding, unboundedFollowing) is used by default. When ordering is defined,
          a growing window frame (rangeFrame, unboundedPreceding, currentRow) is used by default.
 
+    .. note:: Experimental
+
     .. versionadded:: 1.4
     """
 
@@ -95,32 +97,6 @@ class Window(object):
         and ``Window.currentRow`` to specify special boundary values, rather than using integral
         values directly.
 
-        A row based boundary is based on the position of the row within the partition.
-        An offset indicates the number of rows above or below the current row, the frame for the
-        current row starts or ends. For instance, given a row based sliding frame with a lower bound
-        offset of -1 and a upper bound offset of +2. The frame for row with index 5 would range from
-        index 4 to index 7.
-
-        >>> from pyspark.sql import Window
-        >>> from pyspark.sql import functions as func
-        >>> from pyspark.sql import SQLContext
-        >>> sc = SparkContext.getOrCreate()
-        >>> sqlContext = SQLContext(sc)
-        >>> tup = [(1, "a"), (1, "a"), (2, "a"), (1, "b"), (2, "b"), (3, "b")]
-        >>> df = sqlContext.createDataFrame(tup, ["id", "category"])
-        >>> window = Window.partitionBy("category").orderBy("id").rowsBetween(Window.currentRow, 1)
-        >>> df.withColumn("sum", func.sum("id").over(window)).sort("id", "category", "sum").show()
-        +---+--------+---+
-        | id|category|sum|
-        +---+--------+---+
-        |  1|       a|  2|
-        |  1|       a|  3|
-        |  1|       b|  3|
-        |  2|       a|  2|
-        |  2|       b|  5|
-        |  3|       b|  3|
-        +---+--------+---+
-
         :param start: boundary start, inclusive.
                       The frame is unbounded if this is ``Window.unboundedPreceding``, or
                       any value less than or equal to -9223372036854775808.
@@ -151,35 +127,6 @@ class Window(object):
         and ``Window.currentRow`` to specify special boundary values, rather than using integral
         values directly.
 
-        A range-based boundary is based on the actual value of the ORDER BY
-        expression(s). An offset is used to alter the value of the ORDER BY expression, for
-        instance if the current ORDER BY expression has a value of 10 and the lower bound offset
-        is -3, the resulting lower bound for the current row will be 10 - 3 = 7. This however puts a
-        number of constraints on the ORDER BY expressions: there can be only one expression and this
-        expression must have a numerical data type. An exception can be made when the offset is
-        unbounded, because no value modification is needed, in this case multiple and non-numeric
-        ORDER BY expression are allowed.
-
-        >>> from pyspark.sql import Window
-        >>> from pyspark.sql import functions as func
-        >>> from pyspark.sql import SQLContext
-        >>> sc = SparkContext.getOrCreate()
-        >>> sqlContext = SQLContext(sc)
-        >>> tup = [(1, "a"), (1, "a"), (2, "a"), (1, "b"), (2, "b"), (3, "b")]
-        >>> df = sqlContext.createDataFrame(tup, ["id", "category"])
-        >>> window = Window.partitionBy("category").orderBy("id").rangeBetween(Window.currentRow, 1)
-        >>> df.withColumn("sum", func.sum("id").over(window)).sort("id", "category").show()
-        +---+--------+---+
-        | id|category|sum|
-        +---+--------+---+
-        |  1|       a|  4|
-        |  1|       a|  4|
-        |  1|       b|  3|
-        |  2|       a|  2|
-        |  2|       b|  5|
-        |  3|       b|  3|
-        +---+--------+---+
-
         :param start: boundary start, inclusive.
                       The frame is unbounded if this is ``Window.unboundedPreceding``, or
                       any value less than or equal to max(-sys.maxsize, -9223372036854775808).
@@ -202,6 +149,8 @@ class WindowSpec(object):
     and frame boundaries.
 
     Use the static methods in :class:`Window` to create a :class:`WindowSpec`.
+
+    .. note:: Experimental
 
     .. versionadded:: 1.4
     """
@@ -282,12 +231,8 @@ class WindowSpec(object):
 
 def _test():
     import doctest
-    import pyspark.sql.window
     SparkContext('local[4]', 'PythonTest')
-    globs = pyspark.sql.window.__dict__.copy()
-    (failure_count, test_count) = doctest.testmod(
-        pyspark.sql.window, globs=globs,
-        optionflags=doctest.NORMALIZE_WHITESPACE)
+    (failure_count, test_count) = doctest.testmod()
     if failure_count:
         sys.exit(-1)
 

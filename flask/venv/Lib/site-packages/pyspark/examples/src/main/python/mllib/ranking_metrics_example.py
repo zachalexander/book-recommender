@@ -17,7 +17,7 @@
 
 # $example on$
 from pyspark.mllib.recommendation import ALS, Rating
-from pyspark.mllib.evaluation import RegressionMetrics
+from pyspark.mllib.evaluation import RegressionMetrics, RankingMetrics
 # $example off$
 from pyspark import SparkContext
 

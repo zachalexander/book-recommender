@@ -6,7 +6,7 @@ import requests;
 from markupsafe import escape;
 from flask_user import login_required, UserManager, UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
-from sqlalchemy import event
+from sqlalchemy import event, create_engine, inspect
 from sqlalchemy import DDL
 from random import seed
 from random import random
@@ -23,6 +23,12 @@ app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200/recs"}})
 ENV = 'prod'
+
+engine = create_engine("postgres://grrxtpxtklabjt:19192f867330d309d07c38acd0d7f79dc1fef4ccafc757e9e25245d03f54ba20@ec2-52-204-232-46.compute-1.amazonaws.com:5432/d7fl9nj50gmm5f")
+inspector = inspect(engine)
+
+
+
 
 # Setting database configs
 if ENV == 'dev':
@@ -103,20 +109,20 @@ class Ratings(db.Model):
 # Building the new recommendations model
 class NewRecs(db.Model):
     __tablename__ = 'new_recs'
-    col_id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
-    prediction = db.Column(db.Float)
-    rating = db.Column(db.Integer)
     book_id = db.Column(db.Integer)
+    prediction = db.Column(db.Float)
+    col_id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer)
     username = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
     def __init__(self, col_id, userid, prediction, rating, book_id, username, isbn10):
-        self.col_id = col_id
         self.userid = userid
-        self.prediction = prediction
-        self.rating = rating
         self.book_id = book_id
+        self.prediction = prediction
+        self.col_id = col_id
+        self.rating = rating
         self.username = username
         self.isbn10 = isbn10
 
@@ -288,28 +294,34 @@ def getrecs():
     if request.method == 'GET':
         userid = user_id(session.get('username'))
         print(userid)
-        recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
+        recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).first()
         print(recs)
-        recs_list = []
-        for i in recs:
-            gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
-            recs_list.append(gr_bookid)
-        print(recs_list)
-        bk = []
-        for i in recs_list:
-            response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
-            xml = urllib2.urlopen(response_string)
-            data = xml.read()
-            xml.close()
-            data = xmltodict.parse(data)
-            gr_data = json.dumps(data)
-            goodreads_fnl = json.loads(gr_data)
-            gr = goodreads_fnl['GoodreadsResponse']['book']
-            bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
 
-        book = dict(work=bk)
-        return render_template('recs.html', recs = book)
-        # return 'OK'
+        # for table_name in inspector.get_table_names():
+        #     print(table_name)
+        #     for column in inspector.get_columns(table_name):
+        #         print("Column %s" % column['name'])
+
+        # recs_list = []
+        # for i in recs:
+        #     gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
+        #     recs_list.append(gr_bookid)
+        # print(recs_list)
+        # bk = []
+        # for i in recs_list:
+        #     response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
+        #     xml = urllib2.urlopen(response_string)
+        #     data = xml.read()
+        #     xml.close()
+        #     data = xmltodict.parse(data)
+        #     gr_data = json.dumps(data)
+        #     goodreads_fnl = json.loads(gr_data)
+        #     gr = goodreads_fnl['GoodreadsResponse']['book']
+        #     bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
+
+        # book = dict(work=bk)
+        # return render_template('recs.html', recs = book)
+        return 'OK'
     else:
         return "No Data"
 

@@ -45,9 +45,9 @@ if __name__ == "__main__":
     metrics = MulticlassMetrics(predictionAndLabels)
 
     # Overall statistics
-    precision = metrics.precision(1.0)
-    recall = metrics.recall(1.0)
-    f1Score = metrics.fMeasure(1.0)
+    precision = metrics.precision()
+    recall = metrics.recall()
+    f1Score = metrics.fMeasure()
     print("Summary Stats")
     print("Precision = %s" % precision)
     print("Recall = %s" % recall)

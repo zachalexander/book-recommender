@@ -51,12 +51,11 @@ from pyspark.sql.dataframe import DataFrame, DataFrameNaFunctions, DataFrameStat
 from pyspark.sql.group import GroupedData
 from pyspark.sql.readwriter import DataFrameReader, DataFrameWriter
 from pyspark.sql.window import Window, WindowSpec
-from pyspark.sql.pandas.group_ops import PandasCogroupedOps
 
 
 __all__ = [
     'SparkSession', 'SQLContext', 'HiveContext', 'UDFRegistration',
     'DataFrame', 'GroupedData', 'Column', 'Catalog', 'Row',
     'DataFrameNaFunctions', 'DataFrameStatFunctions', 'Window', 'WindowSpec',
-    'DataFrameReader', 'DataFrameWriter', 'PandasCogroupedOps'
+    'DataFrameReader', 'DataFrameWriter'
 ]

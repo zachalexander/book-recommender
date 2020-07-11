@@ -1,0 +1,3 @@
+[console_scripts]
+databricks-connect = pyspark.databricks_connect:main
+

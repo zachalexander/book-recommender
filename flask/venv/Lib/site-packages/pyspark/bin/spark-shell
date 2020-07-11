@@ -32,6 +32,7 @@ if [ -z "${SPARK_HOME}" ]; then
   source "$(dirname "$0")"/find-spark-home
 fi
 
+export TERM=xterm-color
 export _SPARK_CMD_USAGE="Usage: ./bin/spark-shell [options]
 
 Scala REPL options:

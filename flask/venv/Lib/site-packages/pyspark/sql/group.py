@@ -18,10 +18,9 @@
 import sys
 
 from pyspark import since
-from pyspark.rdd import ignore_unicode_prefix
+from pyspark.rdd import ignore_unicode_prefix, PythonEvalType
 from pyspark.sql.column import Column, _to_seq
 from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.pandas.group_ops import PandasGroupedOpsMixin
 from pyspark.sql.types import *
 
 __all__ = ["GroupedData"]
@@ -47,10 +46,12 @@ def df_varargs_api(f):
     return _api
 
 
-class GroupedData(PandasGroupedOpsMixin):
+class GroupedData(object):
     """
     A set of methods for aggregations on a :class:`DataFrame`,
     created by :func:`DataFrame.groupBy`.
+
+    .. note:: Experimental
 
     .. versionadded:: 1.3
     """
@@ -218,6 +219,61 @@ class GroupedData(PandasGroupedOpsMixin):
         else:
             jgd = self._jgd.pivot(pivot_col, values)
         return GroupedData(jgd, self._df)
+
+    @since(2.3)
+    def apply(self, udf):
+        """
+        Maps each group of the current :class:`DataFrame` using a pandas udf and returns the result
+        as a `DataFrame`.
+
+        The user-defined function should take a `pandas.DataFrame` and return another
+        `pandas.DataFrame`. For each group, all columns are passed together as a `pandas.DataFrame`
+        to the user-function and the returned `pandas.DataFrame` are combined as a
+        :class:`DataFrame`.
+
+        The returned `pandas.DataFrame` can be of arbitrary length and its schema must match the
+        returnType of the pandas udf.
+
+        .. note:: This function requires a full shuffle. all the data of a group will be loaded
+            into memory, so the user should be aware of the potential OOM risk if data is skewed
+            and certain groups are too large to fit in memory.
+
+        .. note:: Experimental
+
+        :param udf: a grouped map user-defined function returned by
+            :func:`pyspark.sql.functions.pandas_udf`.
+
+        >>> from pyspark.sql.functions import pandas_udf, PandasUDFType
+        >>> df = spark.createDataFrame(
+        ...     [(1, 1.0), (1, 2.0), (2, 3.0), (2, 5.0), (2, 10.0)],
+        ...     ("id", "v"))
+        >>> @pandas_udf("id long, v double", PandasUDFType.GROUPED_MAP)  # doctest: +SKIP
+        ... def normalize(pdf):
+        ...     v = pdf.v
+        ...     return pdf.assign(v=(v - v.mean()) / v.std())
+        >>> df.groupby("id").apply(normalize).show()  # doctest: +SKIP
+        +---+-------------------+
+        | id|                  v|
+        +---+-------------------+
+        |  1|-0.7071067811865475|
+        |  1| 0.7071067811865475|
+        |  2|-0.8320502943378437|
+        |  2|-0.2773500981126146|
+        |  2| 1.1094003924504583|
+        +---+-------------------+
+
+        .. seealso:: :meth:`pyspark.sql.functions.pandas_udf`
+
+        """
+        # Columns are special because hasattr always return True
+        if isinstance(udf, Column) or not hasattr(udf, 'func') \
+           or udf.evalType != PythonEvalType.SQL_GROUPED_MAP_PANDAS_UDF:
+            raise ValueError("Invalid udf: the udf argument must be a pandas_udf of type "
+                             "GROUPED_MAP.")
+        df = self._df
+        udf_column = udf(*[df[col] for col in df.columns])
+        jdf = self._jgd.flatMapGroupsInPandas(udf_column._jc.expr())
+        return DataFrame(jdf, self.sql_ctx)
 
 
 def _test():
