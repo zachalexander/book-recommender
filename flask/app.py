@@ -24,12 +24,6 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200/recs"}})
 ENV = 'prod'
 
-engine = create_engine("postgres://grrxtpxtklabjt:19192f867330d309d07c38acd0d7f79dc1fef4ccafc757e9e25245d03f54ba20@ec2-52-204-232-46.compute-1.amazonaws.com:5432/d7fl9nj50gmm5f")
-inspector = inspect(engine)
-
-
-
-
 # Setting database configs
 if ENV == 'dev':
     app.debug = True
@@ -113,16 +107,16 @@ class NewRecs(db.Model):
     book_id = db.Column(db.Integer)
     prediction = db.Column(db.Float)
     col_id = db.Column(db.Integer, primary_key=True)
-    rating = db.Column(db.Integer)
+    ratings = db.Column(db.Integer)
     username = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
-    def __init__(self, col_id, userid, prediction, rating, book_id, username, isbn10):
+    def __init__(self, userid, book_id, prediction, col_id, ratings, username, isbn10):
         self.userid = userid
         self.book_id = book_id
         self.prediction = prediction
         self.col_id = col_id
-        self.rating = rating
+        self.ratings = ratings
         self.username = username
         self.isbn10 = isbn10
 
@@ -294,34 +288,34 @@ def getrecs():
     if request.method == 'GET':
         userid = user_id(session.get('username'))
         print(userid)
-        recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).first()
+        recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
         print(recs)
 
-        # for table_name in inspector.get_table_names():
-        #     print(table_name)
-        #     for column in inspector.get_columns(table_name):
-        #         print("Column %s" % column['name'])
+        for table_name in inspector.get_table_names():
+            print(table_name)
+            for column in inspector.get_columns(table_name):
+                print("Column %s" % column['name'])
 
-        # recs_list = []
-        # for i in recs:
-        #     gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
-        #     recs_list.append(gr_bookid)
-        # print(recs_list)
-        # bk = []
-        # for i in recs_list:
-        #     response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
-        #     xml = urllib2.urlopen(response_string)
-        #     data = xml.read()
-        #     xml.close()
-        #     data = xmltodict.parse(data)
-        #     gr_data = json.dumps(data)
-        #     goodreads_fnl = json.loads(gr_data)
-        #     gr = goodreads_fnl['GoodreadsResponse']['book']
-        #     bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
+        recs_list = []
+        for i in recs:
+            gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
+            recs_list.append(gr_bookid)
+        print(recs_list)
+        bk = []
+        for i in recs_list:
+            response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
+            xml = urllib2.urlopen(response_string)
+            data = xml.read()
+            xml.close()
+            data = xmltodict.parse(data)
+            gr_data = json.dumps(data)
+            goodreads_fnl = json.loads(gr_data)
+            gr = goodreads_fnl['GoodreadsResponse']['book']
+            bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
 
-        # book = dict(work=bk)
-        # return render_template('recs.html', recs = book)
-        return 'OK'
+        book = dict(work=bk)
+        return render_template('recs.html', recs = book)
+        # return 'OK'
     else:
         return "No Data"
 
