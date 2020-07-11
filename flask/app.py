@@ -106,19 +106,20 @@ class NewRecs(db.Model):
     col_id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
     prediction = db.Column(db.Float)
-    book_id = db.Column(db.Integer)
     rating = db.Column(db.Integer)
+    book_id = db.Column(db.Integer)
     username = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
-    def __init__(self, col_id, userid, prediction, book_id, rating, username, isbn10):
+    def __init__(self, col_id, userid, prediction, rating, book_id, username, isbn10):
         self.col_id = col_id
         self.userid = userid
         self.prediction = prediction
-        self.book_id = book_id
         self.rating = rating
+        self.book_id = book_id
         self.username = username
         self.isbn10 = isbn10
+
 
 # Building the lookup between book_id and gr_book_id
 class GrBook(db.Model):
@@ -308,7 +309,7 @@ def getrecs():
 
         book = dict(work=bk)
         return render_template('recs.html', recs = book)
-        
+        # return 'OK'
     else:
         return "No Data"
 
