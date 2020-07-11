@@ -291,10 +291,10 @@ def getrecs():
         recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
         print(recs)
 
-        for table_name in inspector.get_table_names():
-            print(table_name)
-            for column in inspector.get_columns(table_name):
-                print("Column %s" % column['name'])
+        # for table_name in inspector.get_table_names():
+        #     print(table_name)
+        #     for column in inspector.get_columns(table_name):
+        #         print("Column %s" % column['name'])
 
         recs_list = []
         for i in recs:
