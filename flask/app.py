@@ -107,14 +107,16 @@ class NewRecs(db.Model):
     userid = db.Column(db.Integer)
     prediction = db.Column(db.Float)
     book_id = db.Column(db.Integer)
+    rating = db.Column(db.Integer)
     username = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
-    def __init__(self, col_id, userid, prediction, book_id, username, isbn10):
+    def __init__(self, col_id, userid, prediction, book_id, rating, username, isbn10):
         self.col_id = col_id
         self.userid = userid
         self.prediction = prediction
         self.book_id = book_id
+        self.rating = rating
         self.username = username
         self.isbn10 = isbn10
 
@@ -284,13 +286,14 @@ def postnew():
 def getrecs():
     if request.method == 'GET':
         userid = user_id(session.get('username'))
+        print(userid)
         recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
-
+        print(recs)
         recs_list = []
         for i in recs:
             gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
             recs_list.append(gr_bookid)
-        
+        print(recs_list)
         bk = []
         for i in recs_list:
             response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
