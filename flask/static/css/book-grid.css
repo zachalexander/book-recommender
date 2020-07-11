@@ -8,6 +8,27 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 2em;
+    max-width: 1000px;
+    margin: auto;
+}
+
+.profile_header {
+    font-weight: 400;
+}
+
+.container-header {
+    margin: 2em auto;
+    max-width: 500px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+}
+
+.container-around {
+    margin: 4em auto;
+    max-width: 1000px;
 }
 
 .grid-container {

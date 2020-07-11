@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, render_template, request, flash, redirect, session, url_for;
-from flask_cors import CORS;
+from flask import Flask, jsonify, make_response, render_template, request, flash, redirect, session, url_for, Response;
+from flask_cors import CORS, cross_origin;
 from flask_sqlalchemy import SQLAlchemy;
+from flask_bootstrap import Bootstrap
 import requests;
 from markupsafe import escape;
 from flask_user import login_required, UserManager, UserMixin
@@ -17,8 +18,10 @@ from urllib.parse import quote
 from pprint import pprint
 import json
 
+
 app = Flask(__name__)
-CORS(app)
+
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200/recs"}})
 ENV = 'prod'
 
 # Setting database configs
@@ -34,6 +37,9 @@ app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = "OCML3CRawVEueaxcuKHOph"
 
 db = SQLAlchemy(app)
+
+
+# custom functions
 
 def customid():
     idquery = db.session.query(Ratings).order_by(Ratings.col_id.desc()).first()
@@ -59,7 +65,6 @@ def idcounter():
     return next_id
 
 def parse_xml(request_xml):
-    # xml_data = request.form['GoodreadsResponse']
     content_dict = xmltodict.parse(request_xml)
     return jsonify(content_dict)
 
@@ -105,6 +110,14 @@ class NewRecs(db.Model):
     username = db.Column(db.String(200))
     isbn10 = db.Column(db.String(200))
 
+    def __init__(self, col_id, userid, prediction, book_id, username, isbn10):
+        self.col_id = col_id
+        self.userid = userid
+        self.prediction = prediction
+        self.book_id = book_id
+        self.username = username
+        self.isbn10 = isbn10
+
 # Building the lookup between book_id and gr_book_id
 class GrBook(db.Model):
     __tablename__ = 'gr_books'
@@ -115,8 +128,9 @@ class GrBook(db.Model):
         self.gr_id = gr_id
         self.book_id = book_id
 
-# Building routes for the site
-
+################################
+# Building routes for the site #
+################################
 
 # Home page
 @app.route('/')
@@ -140,7 +154,7 @@ def register():
             db.session.commit()
             session['username'] = user.username
             session['user_id'] = user_id(session.get('username'))
-            return redirect(url_for('search'))
+            return redirect(url_for('profile'))
         else:
             return render_template('register.html', message='Sorry, this username is already taken.')
 
@@ -159,7 +173,7 @@ def sign_in():
         if user is not None and check_password_hash(user.password_hash, password_entered):
             session['username'] = user.username
             session['user_id'] = user_id(session.get('username'))
-            return redirect(url_for('search'))
+            return redirect(url_for('profile'))
         return render_template('signin.html', message="Sorry, either your username does not exist or your password does not match.")
     else:
         return render_template('signin.html')
@@ -171,6 +185,36 @@ def sign_out():
         return redirect(url_for('sign_in'))
     else:
         return render_template('signout.html')
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def get_profile():
+    if request.method == 'GET':
+        userid = user_id(session.get('username'))
+        username = session.get('username')
+        ratings = db.session.query(Ratings).filter(Ratings.userid == userid).all()
+
+        ratings_list = []
+        for i in ratings:
+            gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
+            ratings_list.append(gr_bookid)
+        
+        bk = []
+        for i in ratings_list:
+            response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
+            xml = urllib2.urlopen(response_string)
+            data = xml.read()
+            xml.close()
+            data = xmltodict.parse(data)
+            gr_data = json.dumps(data)
+            goodreads_fnl = json.loads(gr_data)
+            gr = goodreads_fnl['GoodreadsResponse']['book']
+            bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
+
+        book = dict(work=bk)
+        return render_template('profile.html', recs = book, username = username)
+    else:
+        return 'Error in login process...'
 
 
 @app.route("/search", methods=['GET', 'POST'])
@@ -185,7 +229,6 @@ def search():
         goodreads_fnl = json.loads(gr_data)
         gr = goodreads_fnl['GoodreadsResponse']['search']['results']
 
-    
         if not request.form.get("title"):
             return("Please enter a book title below.")
 
@@ -210,7 +253,7 @@ def bookDetails(book_id):
     return render_template("bookDetails.html", book = gr)
 
 
-
+# submitting new book ratings
 @app.route("/new-rating", methods=['POST'])
 def postnew():
     if request.method == 'POST':
@@ -236,15 +279,21 @@ def postnew():
         return render_template('success.html')
 
 
+# checking on recommendations
 @app.route("/recs", methods=['GET'])
 def getrecs():
     if request.method == 'GET':
         userid = user_id(session.get('username'))
         recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
-        
-        recs_json = []
+
+        recs_list = []
         for i in recs:
-            response_string = 'https://www.goodreads.com/book/show?id='+ str(i.book_id) + '&key=Ev590L5ibeayXEVKycXbAw'
+            gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
+            recs_list.append(gr_bookid)
+        
+        bk = []
+        for i in recs_list:
+            response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
             xml = urllib2.urlopen(response_string)
             data = xml.read()
             xml.close()
@@ -252,20 +301,11 @@ def getrecs():
             gr_data = json.dumps(data)
             goodreads_fnl = json.loads(gr_data)
             gr = goodreads_fnl['GoodreadsResponse']['book']
-            gr_json = json.dumps(gr)
-            print(gr_json.title)
+            bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
 
-
-
-            #### FIX PRINTING OF RECS
-
-
-            # recs_json
-            # recs_json.append(gr)
-            # book = json.dumps(recs_json)
-
-        return gr
-        # render_template('recs.html', book = book)
+        book = dict(work=bk)
+        return render_template('recs.html', recs = book)
+        
     else:
         return "No Data"
 
