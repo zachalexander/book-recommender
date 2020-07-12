@@ -103,22 +103,15 @@ class Ratings(db.Model):
 # Building the new recommendations model
 class NewRecs(db.Model):
     __tablename__ = 'new_recs'
+    id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
     book_id = db.Column(db.Integer)
     prediction = db.Column(db.Float)
-    col_id = db.Column(db.Integer, primary_key=True)
-    ratings = db.Column(db.Integer)
-    username = db.Column(db.String(200))
-    isbn10 = db.Column(db.String(200))
 
-    def __init__(self, userid, book_id, prediction, col_id, ratings, username, isbn10):
+    def __init__(self, userid, book_id, prediction):
         self.userid = userid
         self.book_id = book_id
         self.prediction = prediction
-        self.col_id = col_id
-        self.ratings = ratings
-        self.username = username
-        self.isbn10 = isbn10
 
 
 # Building the lookup between book_id and gr_book_id
@@ -288,14 +281,9 @@ def getrecs():
     if request.method == 'GET':
         userid = user_id(session.get('username'))
         print(userid)
+        db.session.flush()
         recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
         print(recs)
-
-        # for table_name in inspector.get_table_names():
-        #     print(table_name)
-        #     for column in inspector.get_columns(table_name):
-        #         print("Column %s" % column['name'])
-
         recs_list = []
         for i in recs:
             gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
@@ -315,7 +303,6 @@ def getrecs():
 
         book = dict(work=bk)
         return render_template('recs.html', recs = book)
-        # return 'OK'
     else:
         return "No Data"
 
