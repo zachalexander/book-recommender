@@ -2,12 +2,22 @@
 	font-family: 'Roboto', 'Arial', sans-serif;
 }
 
-.nav_top {
+a {
+    color: #333 !important;
+}
+
+.container-nav {
+    max-width: 1000px;
+    margin: auto;
     display: flex;
     flex-direction: row;
-    align-items: center;
     justify-content: space-between;
-    margin: 1em 0;
+    width: 100%;
+    align-items: center;
+}
+
+.card-header {
+    text-align: center;
 }
 
 
@@ -15,23 +25,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 2em !important;
 }
 
 img {
     max-width: 125px;
     max-height: 150px;
+    margin: auto;
 }
 
 .form-group {
     text-align: center;
-    padding: 0em 2em 2em 2em;
+    padding: 0em 2em;
 }
 
 .rating_form {
     align-items: center;
     text-align: center;
-    margin-bottom: 2em;
-    border: 1px solid #ccc;
     padding: 1em;
 }
 
@@ -46,27 +56,13 @@ img {
     text-align: center;
 }
 
-.btn_neg {
-	padding: 0.5em 1em;
-    font-weight: 700;
-	border: 2px solid #333;
-	color: #333;
-	background: transparent;
+table {
+    max-width: 130px;
+    margin: auto;
 }
 
-.btn_neg:hover {
-    cursor: pointer;
-}
-
-
-.btn {
-	padding: 0.5em 1em;
-    font-weight: 700;
-	border: 2px solid lightseagreen;
-	color: #fff;
-	background: lightseagreen;
-}
-
-.btn:hover {
-	cursor: pointer;
+#card-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }

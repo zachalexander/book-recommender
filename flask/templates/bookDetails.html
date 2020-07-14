@@ -4,72 +4,100 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../static/css/book-desc.css?anything=stopcache26" />
-    <title>Search Results</title>
+    <link rel="stylesheet" href="../static/css/book-desc.css?anything=stopcache33" />
+    <title>Book Details</title>
   </head>
   <body>
-    <div class="nav_top">
-      <a href="/search"><button class="btn_neg">Back to search results</button></a>
-  </div>
+  <nav class="navbar navbar-light bg-light">
+    <div class="container-nav">
+        <a href="/profile" onclick="loading();"><h5>Home</h5></a>
+        <a href = "/search"><button class="btn btn-secondary" type="submit">Back to search</button></a>
+    </div>
+  </nav>
+
 {% block main %}
   <div class="container">
-    <h3 class="card-header">{{ book.title }}</h3>
-
-    {% if book.id %} 
-    <form class="rating_form" action="/new-rating" method="POST">
-      <select id="isbn10" class="isbn10" name="isbn10" type="hidden">
-          <option value="{{book.isbn}}">{{book.isbn}}</option>
+    <h5 id="loading-message">Loading profile...</h5>
+    <img id="loading" class="col-sm-3 col-sm-offset-4" src="{{ url_for('static',
+    filename='loader_fnl.gif') }}">
+    <div class="card" id="bookcard">
+      <h6 class="card-header">{{ book.title }}</h4>
+      {% if book.id %} 
+      <form class="rating_form" action="/new-rating" method="POST">
+        <select id="isbn10" class="isbn10" name="isbn10" type="hidden">
+            <option value="{{book.isbn}}">{{book.isbn}}</option>
+        </select>
+        <select id="bookid" class="bookid" name="bookid" type="hidden">
+          <option value="{{book.id}}">{{book.id}}</option>
       </select>
-      <select id="bookid" class="bookid" name="bookid" type="hidden">
-        <option value="{{book.id}}">{{book.id}}</option>
-    </select>
-      <div class="form-group">
-        <h4>Please rate the book</h4>
-        <input type="radio" name="rating" value=1 /> 1
-        <input type="radio" name="rating" value=2 /> 2
-        <input type="radio" name="rating" value=3 /> 3
-        <input type="radio" name="rating" value=4 /> 4
-        <input type="radio" name="rating" value=5 /> 5
-      </div>
-      <input type="submit" value="Submit" class="btn" />
-    </form>
-    {% else %}
-    <h5>Sorry, this book does not have available ISBN numbers and therefore cannot be rated.</h5>
-    {% endif %}
+        <div class="form-group">
+          <p>Please rate the book</p>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th scope="col">1</th>
+                <th scope="col">2</th>
+                <th scope="col">3</th>
+                <th scope="col">4</th>
+                <th scope="col">5</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="radio" name="rating" value=1 /></td>
+                <td><input type="radio" name="rating" value=2 /></td>
+                <td><input type="radio" name="rating" value=3 /></td>
+                <td><input type="radio" name="rating" value=4 /></td>
+                <td><input type="radio" name="rating" value=5 /></td>
+              </tr>
+            </tbody>
+          </table>
 
-    <div class="card-body">
-    </div><br>
-    {% if book.image_url %}
-    <img id="imgDetails" src="{{ book.image_url }}" title="{{ book.title }}"
-    alt="{{ book.title }}"/>
-    {% else %}
-    <img width="60%" height="70%" src="../static/default-book-cover.jpg" title="{{ book.title }}"
-    alt="{{ book.title }}"/>
-    {% endif %}
-
-    {% if book.description %}
-    <div class="card-text description">
-      {{book.description | safe}}
-    </div>
-    {% endif %}
-    <ul class="list-group list-group-flush">Author:<br>
-        <li class="list-group-item">{{ book.authors.author.name }}</li><br>
-    </ul>
-    <div class="card-body">
-      {% if book.publication_year %}
-        <span class="card-link">Published: {{ book.publication_year }}</span>
+        </div>
+        <input type="submit" value="Submit rating" class="btn btn-smal btn-info" />
+      </form>
+      {% else %}
+      <h5>Sorry, this book does not have available ISBN numbers and therefore cannot be rated.</h5>
       {% endif %}
+  
+      <div class="card-body">
+      </div><br>
+      {% if book.image_url %}
+      <img id="imgDetails" src="{{ book.image_url }}" title="{{ book.title }}"
+      alt="{{ book.title }}"/>
+      {% else %}
+      <img width="60%" height="70%" src="../static/default-book-cover.jpg" title="{{ book.title }}"
+      alt="{{ book.title }}"/>
+      {% endif %}
+  
+      {% if book.description %}
+      <div class="card-text description">
+        {{book.description | safe}}
+      </div>
+      {% endif %}
+      <div class="card-footer text-muted" id="card-footer">
+        <p class="list-group list-group-flush"><strong>Author:</strong>{{ book.authors.author.name }}
+        <p class="card-link"><strong>Published:</strong> {{ book.publication_year }}</p>
+      </div>
     </div>
+  
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>    
+  <script type="text/javascript">
+  $("#loading").hide();
+  $("#loading-message").hide();
+  $("#isbn10").hide();
+  $("#bookid").hide();
+      function loading(){
+          $("#loading").show();
+          $("#loading-message").show();  
+          $("#bookcard").hide();    
+      }
+  </script>
   </div>
 {% endblock %}
-
-<script>
-  function hide(){
-    var bookid = document.getElementById('bookid');
-    var isbn10 = document.getElementById('isbn10');
-    bookid.style.visibility = 'hidden';
-    isbn10.style.visibility = 'hidden';
-  }
-  hide()
-</script>
+</body>
+</html>

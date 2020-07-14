@@ -18,7 +18,6 @@ from urllib.parse import quote
 from pprint import pprint
 import json
 
-
 app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200/recs"}})
@@ -193,11 +192,11 @@ def get_profile():
         ratings_list = []
         for i in ratings:
             gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
-            ratings_list.append(gr_bookid)
+            ratings_list.append([gr_bookid, i.rating])
         
         bk = []
         for i in ratings_list:
-            response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'
+            response_string = 'https://www.goodreads.com/book/show?id='+ str(i[0]) + '&key=Ev590L5ibeayXEVKycXbAw'
             xml = urllib2.urlopen(response_string)
             data = xml.read()
             xml.close()
@@ -205,7 +204,7 @@ def get_profile():
             gr_data = json.dumps(data)
             goodreads_fnl = json.loads(gr_data)
             gr = goodreads_fnl['GoodreadsResponse']['book']
-            bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url']))
+            bk.append(dict(id=gr['id'], book_title=gr['title'], image_url=gr['image_url'], rating=i[1]))
 
         book = dict(work=bk)
         return render_template('profile.html', recs = book, username = username)
@@ -280,15 +279,11 @@ def postnew():
 def getrecs():
     if request.method == 'GET':
         userid = user_id(session.get('username'))
-        print(userid)
-        db.session.flush()
         recs = db.session.query(NewRecs).filter(NewRecs.userid == userid).all()
-        print(recs)
         recs_list = []
         for i in recs:
             gr_bookid = db.session.query(GrBook).filter(GrBook.gr_id == i.book_id).first().book_id
             recs_list.append(gr_bookid)
-        print(recs_list)
         bk = []
         for i in recs_list:
             response_string = 'https://www.goodreads.com/book/show?id='+ str(i) + '&key=Ev590L5ibeayXEVKycXbAw'

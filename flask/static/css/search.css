@@ -1,0 +1,69 @@
+*, html {
+	font-family: 'Roboto', 'Arial', sans-serif;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	background: #eee;
+}
+
+
+.container-nav {
+    max-width: 1000px;
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+a {
+	color: #333 !important;
+}
+
+#search-card {
+	margin-top: 3em;
+	padding: 2em;
+}
+
+.welcome {
+	margin-bottom: 1em;
+}
+
+/* Base Page */
+
+.top {
+	margin-bottom: 1em;
+}
+
+#header-card {
+	max-width: 600px;
+	padding: 2em;
+	margin: 0.25em;
+}
+
+.container_search {
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.search_form {
+	min-width: 300px;
+	margin-top: 1em;
+}
+
+.title_label, .author_label {
+	font-size: 0.75em;
+	font-weight: 700;
+}
+
+#loading {
+    width: auto;
+    height: auto;
+}
