@@ -167,3 +167,12 @@ div#loading {
     background: url(/static/loadingimage.gif) no-repeat;
     cursor: wait;
 }
+
+#fullcontainer {
+	margin: 1em;
+}
+
+#welcomecard {
+	margin: 1em;
+	border: none !important;
+}
