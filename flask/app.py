@@ -1,45 +1,47 @@
 from flask import Flask, jsonify, make_response, render_template, request, flash, redirect, session, url_for, Response;
 from flask_cors import CORS, cross_origin;
 from flask_sqlalchemy import SQLAlchemy;
-from flask_bootstrap import Bootstrap
 import requests;
 from markupsafe import escape;
 from flask_user import login_required, UserManager, UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
-from sqlalchemy import event, create_engine, inspect
-from sqlalchemy import DDL
-from random import seed
-from random import random
+from sqlalchemy import event, create_engine, inspect, DDL
+from random import seed, random
 import uuid
 from uuid import uuid1
 import xmltodict
 import urllib.request as urllib2
 from urllib.parse import quote
-from pprint import pprint
 import json
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200/recs"}})
+CORS(app)
 ENV = 'prod'
+
+LOCAL_DB_URL = os.getenv("LOCAL_DB_URL")
+REMOTE_DB_URL = os.getenv("REMOTE_DB_URL")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Setting database configs
 if ENV == 'dev':
     app.debug = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Biology512@localhost/book_recs'
+    app.config['SQLALCHEMY_DATABASE_URI'] = LOCAL_DB_URL
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://grrxtpxtklabjt:19192f867330d309d07c38acd0d7f79dc1fef4ccafc757e9e25245d03f54ba20@ec2-52-204-232-46.compute-1.amazonaws.com:5432/d7fl9nj50gmm5f'
+    app.config['SQLALCHEMY_DATABASE_URI'] = REMOTE_DB_URL
 
 app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['SECRET_KEY'] = "OCML3CRawVEueaxcuKHOph"
+app.config['SECRET_KEY'] = SECRET_KEY
 
 db = SQLAlchemy(app)
 
 
 # custom functions
-
 def customid():
     idquery = db.session.query(Ratings).order_by(Ratings.col_id.desc()).first()
     last_id = int(idquery.col_id)
@@ -132,7 +134,7 @@ class GrBook(db.Model):
 def index():
    return render_template("base.html")
 
-# Registration page
+# registration page
 @app.route('/register', methods=["GET", "POST"])
 def register():
     if request.method == 'POST':
@@ -158,7 +160,7 @@ def register():
     else:
         return render_template('register.html')
 
-
+# sign-in page
 @app.route('/sign-in', methods=["GET", "POST"])
 def sign_in():
     if request.method == 'POST':
@@ -173,6 +175,7 @@ def sign_in():
     else:
         return render_template('signin.html')
 
+# sign-out page
 @app.route('/sign-out', methods=["GET", "POST"])
 def sign_out():
     if request.method == 'POST':
@@ -181,7 +184,7 @@ def sign_out():
     else:
         return render_template('signout.html')
 
-
+# loads the user profile
 @app.route('/profile', methods=['GET', 'POST'])
 def get_profile():
     if request.method == 'GET':
@@ -211,7 +214,7 @@ def get_profile():
     else:
         return 'Error in login process...'
 
-
+# search books page
 @app.route("/search", methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
@@ -274,7 +277,7 @@ def postnew():
         return render_template('success.html')
 
 
-# checking on recommendations
+# getting book recommendations
 @app.route("/recs", methods=['GET'])
 def getrecs():
     if request.method == 'GET':
