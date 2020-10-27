@@ -4,7 +4,7 @@ certifi==2020.6.20
 cffi==1.14.0
 chardet==3.0.4
 click==7.1.2
-cryptography==2.9.2
+cryptography==3.2
 databricks-cli==0.11.0
 databricks-connect==6.5.1
 dnspython==1.16.0
